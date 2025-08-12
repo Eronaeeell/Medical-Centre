@@ -21,22 +21,21 @@
     <p class="text-muted mb-3">Process payments and generate receipts for patients</p>
 
     <%
-        List<Map<String, String>> payments = (List<Map<String, String>>) application.getAttribute("payments");
-        List<Map<String, String>> pendingCharges = (List<Map<String, String>>) application.getAttribute("pendingCharges");
-        double todaysCollection = 2450.0;
-        double outstanding = 0.0;
-        int receiptsIssued = 0;
-        int pendingPayments = pendingCharges != null ? pendingCharges.size() : 0;
-        if (payments != null) {
-            for (Map<String, String> p : payments) {
-                if ("Paid".equalsIgnoreCase(p.get("status"))) receiptsIssued++;
-            }
-        }
-        if (pendingCharges != null) {
-            for (Map<String, String> c : pendingCharges) {
-                outstanding += Double.parseDouble(c.get("totalAmount"));
-            }
-        }
+        // Expecting: payments (List<Map<..>>), pendingCharges (List<Map<..>>)
+        List<Map<String,String>> payments = (List<Map<String,String>>) request.getAttribute("payments");
+        List<Map<String,String>> pendingCharges = (List<Map<String,String>>) request.getAttribute("pendingCharges");
+
+        double todaysCollection = request.getAttribute("todaysCollection") != null
+            ? ((Number) request.getAttribute("todaysCollection")).doubleValue() : 0.0;
+
+        int receiptsIssued = request.getAttribute("receiptsIssued") != null
+            ? ((Number) request.getAttribute("receiptsIssued")).intValue() : 0;
+
+        int pendingPayments = request.getAttribute("pendingPayments") != null
+            ? ((Number) request.getAttribute("pendingPayments")).intValue() : 0;
+
+        double outstanding = request.getAttribute("outstanding") != null
+            ? ((Number) request.getAttribute("outstanding")).doubleValue() : 0.0;
     %>
 
     <!-- Payment Statistics -->
@@ -96,7 +95,7 @@
             <tbody>
             <%
                 if (pendingCharges != null) {
-                    for (Map<String, String> c : pendingCharges) {
+                    for (Map<String,String> c : pendingCharges) {
             %>
             <tr>
                 <td><%= c.get("patientName") %></td>
@@ -105,7 +104,9 @@
                 <td><%= c.get("services") %></td>
                 <td>RM <%= c.get("totalAmount") %></td>
                 <td>
-                    <button type="button" class="btn btn-sm btn-success collect-btn" data-toggle="modal" data-target="#collectModal"
+                    <button type="button" class="btn btn-sm btn-success collect-btn"
+                        data-toggle="modal" data-target="#collectModal"
+                        data-appointment-id="<%= c.get("appointmentId") %>"
                         data-patient="<%= c.get("patientName") %>"
                         data-doctor="<%= c.get("doctorName") %>"
                         data-services="<%= c.get("services") %>"
@@ -114,7 +115,9 @@
                     </button>
                 </td>
             </tr>
-            <% } } %>
+            <%      }
+                }
+            %>
             </tbody>
         </table>
     </div>
@@ -138,7 +141,7 @@
             <tbody>
             <%
                 if (payments != null) {
-                    for (Map<String, String> p : payments) {
+                    for (Map<String,String> p : payments) {
                         String status = p.get("status");
                         String badgeClass =
                             "Paid".equalsIgnoreCase(status) ? "badge-success" :
@@ -154,12 +157,18 @@
                 <td><%= p.get("paymentMethod") %></td>
                 <td><span class="badge badge-pill <%= badgeClass %>"><%= status %></span></td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary print-btn">
-                        <i class="fas fa-print"></i>
-                    </button>
+                    <form action="PrintReceiptServlet" method="get" class="d-inline">
+                        <!-- if you need a payment ID, include it in the map and use here -->
+                        <input type="hidden" name="receiptNo" value="<%= p.get("receiptNo") %>">
+                        <button class="btn btn-sm btn-outline-primary" title="Print Receipt">
+                            <i class="fas fa-print"></i>
+                        </button>
+                    </form>
                 </td>
             </tr>
-            <% } } %>
+            <%      }
+                }
+            %>
             </tbody>
         </table>
     </div>
@@ -175,10 +184,12 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" name="action" value="collect">
-                <input type="hidden" id="modal-patient" name="patientName">
-                <input type="hidden" id="modal-doctor" name="doctorName">
+
+                <input type="hidden" name="appointmentId" id="modal-appointment-id">
+                <input type="hidden" id="modal-patient"  name="patientName">
+                <input type="hidden" id="modal-doctor"   name="doctorName">
                 <input type="hidden" id="modal-services" name="services">
-                <input type="hidden" id="modal-amount" name="amount">
+                <input type="hidden" id="modal-amount"   name="amount">
 
                 <p><strong>Patient:</strong> <span id="modal-patient-view"></span></p>
                 <p><strong>Doctor:</strong> <span id="modal-doctor-view"></span></p>
@@ -212,6 +223,8 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
 <script>
     $('.collect-btn').on('click', function () {
+        $('#modal-appointment-id').val($(this).data('appointment-id'));
+
         $('#modal-patient').val($(this).data('patient'));
         $('#modal-doctor').val($(this).data('doctor'));
         $('#modal-services').val($(this).data('services'));

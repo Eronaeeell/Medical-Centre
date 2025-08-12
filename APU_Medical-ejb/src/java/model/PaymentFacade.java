@@ -33,6 +33,33 @@ public class PaymentFacade extends AbstractFacade<Payment> {
     return em.createQuery("SELECT p FROM Payment p WHERE p.appointment.id = :appointmentId", Payment.class)
              .setParameter("appointmentId", appointmentId)
              .getResultList();
-}
+    }
+      // All PAID payments (newest first)
+    public List<Payment> findPaid() {
+        return em.createQuery(
+            "SELECT p FROM Payment p WHERE p.status = :st ORDER BY p.id DESC",
+            Payment.class)
+            .setParameter("st", "Paid")
+            .getResultList();
+    }
+
+    // Any PENDING payments (if you want to show pending list)
+    public List<Payment> findPending() {
+        return em.createQuery(
+            "SELECT p FROM Payment p WHERE p.status = :st ORDER BY p.id DESC",
+            Payment.class)
+            .setParameter("st", "Pending")
+            .getResultList();
+    }
+
+    // Sum of today's paid collection (optional; uses your date string field)
+    public double sumTodayPaid(String todayStr) {
+        Number n = em.createQuery(
+            "SELECT COALESCE(SUM(p.amount),0) FROM Payment p " +
+            "WHERE p.status='Paid' AND p.paymentDate = :d", Number.class)
+            .setParameter("d", todayStr)
+            .getSingleResult();
+        return n.doubleValue();
+    }
     
 }

@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import model.Appointment;
 import model.AppointmentFacade;
-import model.CounterStaff;
 import model.CounterStaffFacade;
 import model.CustomerFacade;
 import model.Payment;
@@ -38,123 +37,133 @@ public class CounterPaymentServlet extends HttpServlet {
              throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        CounterStaff counter = (CounterStaff) (session != null ? session.getAttribute("counter") : null);
-
-        if (counter == null) {
-            response.sendRedirect("staff_login.jsp?error=Please+login+first");
-            return;
-        }
+//        if (session == null || session.getAttribute("loginUser") == null) {
+//            response.sendRedirect("staffLogin.jsp");
+//            return;
+//        }
+//        String role = (String) session.getAttribute("role");
+//        if (!( "counter".equals(role) || "manager".equals(role) )) {
+//            session.setAttribute("error", "Invalid User Role");
+//            response.sendRedirect("stafflogin.jsp");
+//            return;
+//        }
 
         String action = request.getParameter("action");
 
-        // ✅ Payment Collection Logic
-        if ("collect".equals(action) && "POST".equalsIgnoreCase(request.getMethod())) {
+        // --------- COLLECT PAYMENT (POST) ----------
+        if ("POST".equalsIgnoreCase(request.getMethod()) && "collect".equalsIgnoreCase(action)) {
             try {
-                double amount = Double.parseDouble(request.getParameter("amount"));
+                String appointmentIdParam = request.getParameter("appointmentId");
+                String amountParam = request.getParameter("amount");
                 String method = request.getParameter("paymentMethod");
-                String patientName = request.getParameter("patientName");
-                String doctorName = request.getParameter("doctorName");
-                String services = request.getParameter("services");
 
-                // Find matching appointment
-                List<Appointment> allAppointments = appointmentFacade.findAll();
-                Appointment appointment = null;
-                for (Appointment a : allAppointments) {
-                    if (a.getCustomer() != null && a.getCustomer().getName().equals(patientName)
-                            && a.getDoctorName().equals(doctorName)
-                            && a.getType().equals(services)) {
-                        appointment = a;
-                        break;
-                    }
+                if (appointmentIdParam == null || appointmentIdParam.isEmpty()) {
+                    throw new IllegalArgumentException("Missing appointmentId.");
                 }
 
-                if (appointment == null) {
-                    session.setAttribute("error", "Appointment not found!");
-                    response.sendRedirect("CounterPayment");
-                    return;
+                Long appointmentId = Long.valueOf(appointmentIdParam);
+                Appointment appt = appointmentFacade.find(appointmentId);
+                if (appt == null) throw new IllegalArgumentException("Appointment not found.");
+                if (!"Completed".equalsIgnoreCase(appt.getStatus())) {
+                    throw new IllegalStateException("Only completed appointments can be paid.");
                 }
 
-                // Create Payment record
-                Payment payment = new Payment();
-                payment.setAmount(amount);
-                payment.setMethod(method);
-                payment.setStatus("Paid");
-                payment.setType(appointment.getType());
-                payment.setPaymentDate(java.time.LocalDate.now().toString());
-                payment.setPaymentTime(java.time.LocalTime.now().withNano(0).toString());
-                payment.setCustomer(appointment.getCustomer());
-                payment.setAppointment(appointment);
+                double amount = Double.parseDouble(amountParam);
 
-                paymentFacade.create(payment);
+                Payment p = new Payment();
+                p.setAmount(amount);
+                p.setMethod(method);
+                p.setStatus("Paid");
+                p.setPaymentDate(java.time.LocalDate.now().toString());
+                p.setPaymentTime(java.time.LocalTime.now().withNano(0).toString());
+                p.setCustomer(appt.getCustomer());
+                p.setAppointment(appt);
+                p.setType(appt.getType());   // services
+                // NOTE: We DO NOT call p.setDoctor(...). We’ll use appt.getDoctorName() when displaying.
 
-                // Optional: mark appointment outstanding as 0
-                appointment.setOutstanding("0.00");
-                appointmentFacade.edit(appointment);
+                paymentFacade.create(p);
 
-                session.setAttribute("success", "Payment of RM " + amount + " successfully recorded.");
-            } catch (Exception e) {
-                session.setAttribute("error", "Error processing payment: " + e.getMessage());
+                // Mark appointment as settled
+                appt.setOutstanding("0.00");
+                appointmentFacade.edit(appt);
+
+                session.setAttribute("success", "Payment recorded. Receipt RC" + p.getId());
+            } catch (Exception ex) {
+                session.setAttribute("error", "Failed to process payment: " + ex.getMessage());
             }
-            response.sendRedirect("CounterPayment");
+            response.sendRedirect(request.getContextPath() + "CounterPaymentServlet");
             return;
         }
 
-        // ✅ Build data for JSP
-        List<Payment> payments = paymentFacade.findAll();
-        List<Appointment> allAppointments = appointmentFacade.findAll();
+        // --------- BUILD TABLE DATA (GET) ----------
+        List<Payment> allPayments = paymentFacade.findAll();
 
-        // Pending Charges
-        List<Map<String, String>> pendingCharges = new ArrayList<>();
-        for (Appointment a : allAppointments) {
-            boolean paid = false;
-            for (Payment p : payments) {
-                if (p.getAppointment() != null && p.getAppointment().getId().equals(a.getId())) {
-                    paid = true;
-                    break;
-                }
-            }
-            if ("Completed".equalsIgnoreCase(a.getStatus()) && !paid) {
-                Map<String, String> map = new HashMap<>();
-                map.put("patientName", a.getCustomer() != null ? a.getCustomer().getName() : "N/A");
-                map.put("doctorName", a.getDoctorName());
-                map.put("appointmentDate", a.getDate());
-                map.put("services", a.getType());
-                map.put("totalAmount", a.getOutstanding());
-                pendingCharges.add(map);
-            }
-        }
-
-        // Today's Collection
+        // Today’s collection total
         String today = java.time.LocalDate.now().toString();
         double todaysCollection = 0.0;
-        for (Payment p : payments) {
+        for (Payment p : allPayments) {
             if ("Paid".equalsIgnoreCase(p.getStatus()) && today.equals(p.getPaymentDate())) {
                 todaysCollection += p.getAmount();
             }
         }
 
-        // Set attributes for original JSP
-        request.getServletContext().setAttribute("payments", buildPaymentMap(payments));
-        request.getServletContext().setAttribute("pendingCharges", pendingCharges);
+        // Payment History -> List<Map<String,String>>
+        List<Map<String,String>> paymentHistory = new ArrayList<>();
+        for (Payment p : allPayments) {
+            if (!"Paid".equalsIgnoreCase(p.getStatus())) continue;
+
+            Appointment appt = p.getAppointment();
+            Map<String,String> row = new HashMap<>();
+            row.put("receiptNo", "RC" + p.getId());
+            row.put("patientName", p.getCustomer() != null ? p.getCustomer().getName() : "-");
+            row.put("doctorName", appt != null ? appt.getDoctorName() : "-"); // use doctorName
+            row.put("services", appt != null ? appt.getType() : p.getType());
+            row.put("amount", String.format("%.2f", p.getAmount()));
+            row.put("paymentMethod", p.getMethod());
+            row.put("status", p.getStatus());
+            paymentHistory.add(row);
+        }
+
+        // Pending Charges -> Completed appointments with no Paid payment
+        List<Appointment> allAppts = appointmentFacade.findAll();
+        List<Map<String,String>> pendingCharges = new ArrayList<>();
+        double outstanding = 0.0;
+
+        for (Appointment a : allAppts) {
+            if (!"Completed".equalsIgnoreCase(a.getStatus())) continue;
+
+            List<Payment> apptPays = paymentFacade.findByAppointmentId(a.getId());
+            boolean hasPaid = apptPays.stream().anyMatch(pp -> "Paid".equalsIgnoreCase(pp.getStatus()));
+            if (hasPaid) continue;
+
+            String amtStr = a.getOutstanding() != null ? a.getOutstanding() : "0.00";
+            double amt = 0.0;
+            try { amt = Double.parseDouble(amtStr); } catch (Exception ignored) {}
+
+            Map<String,String> row = new HashMap<>();
+            row.put("appointmentId", String.valueOf(a.getId()));
+            row.put("patientName", a.getCustomer() != null ? a.getCustomer().getName() : "-");
+            row.put("doctorName", a.getDoctorName());              // use doctorName
+            row.put("appointmentDate", a.getDate());
+            row.put("services", a.getType());
+            row.put("totalAmount", String.format("%.2f", amt));
+            pendingCharges.add(row);
+            outstanding += amt;
+        }
+
+        // Stats
+        int receiptsIssued = paymentHistory.size();
+        int pendingPayments = pendingCharges.size();
+
+        // Send to JSP (maps)
+        request.setAttribute("payments", paymentHistory);
+        request.setAttribute("pendingCharges", pendingCharges);
+        request.setAttribute("todaysCollection", todaysCollection);
+        request.setAttribute("receiptsIssued", receiptsIssued);
+        request.setAttribute("pendingPayments", pendingPayments);
+        request.setAttribute("outstanding", outstanding);
 
         request.getRequestDispatcher("counterPayment.jsp").forward(request, response);
-    }
-
-    // build payment map to match existing counterPayment in Payment Facade
-    private List<Map<String, String>> buildPaymentMap(List<Payment> payments) {
-        List<Map<String, String>> paymentList = new ArrayList<>();
-        for (Payment p : payments) {
-            Map<String, String> map = new HashMap<>();
-            map.put("receiptNo", String.valueOf(p.getId()));
-            map.put("patientName", p.getCustomer() != null ? p.getCustomer().getName() : "-");
-            map.put("doctorName", p.getAppointment() != null ? p.getAppointment().getDoctorName() : "-");
-            map.put("services", p.getType());
-            map.put("amount", String.valueOf(p.getAmount()));
-            map.put("paymentMethod", p.getMethod());
-            map.put("status", p.getStatus());
-            paymentList.add(map);
-        }
-        return paymentList;
     }
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**

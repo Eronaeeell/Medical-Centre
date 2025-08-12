@@ -27,7 +27,7 @@
             </a>
         </li>
         <li>
-            <a href="counterPayment"
+            <a href="CounterPaymentServlet"
                class="nav-link d-flex align-items-center <%= "payments".equals(activePage) ? "active-link" : "text-dark" %>">
                 Payments
             </a>
