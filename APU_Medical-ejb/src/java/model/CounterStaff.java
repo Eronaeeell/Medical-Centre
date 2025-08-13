@@ -31,9 +31,11 @@ public class CounterStaff implements Serializable {
     private String phoneNo;
     private String password;
     private String role; 
+    private String status;
+    private String joinDate;
+    private String department;
 
-    public CounterStaff(Long id, String staffname, String ic, String age, String gender, String email, String phoneNo, String password, String role) {
-        this.id = id;
+    public CounterStaff(String staffname, String ic, String age, String gender, String email, String phoneNo, String password, String role, String status, String joinDate, String department) {
         this.staffname = staffname;
         this.ic = ic;
         this.age = age;
@@ -42,6 +44,35 @@ public class CounterStaff implements Serializable {
         this.phoneNo = phoneNo;
         this.password = password;
         this.role = role;
+        this.status = status;
+        this.joinDate = joinDate;
+        this.department = department;
+    }
+
+    
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getJoinDate() {
+        return joinDate;
+    }
+
+    public void setJoinDate(String joinDate) {
+        this.joinDate = joinDate;
     }
 
     public CounterStaff() {

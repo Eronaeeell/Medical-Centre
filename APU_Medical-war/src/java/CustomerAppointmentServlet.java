@@ -12,15 +12,20 @@ import model.Appointment;
 import model.AppointmentFacade;
 import model.Customer;
 import model.CustomerFacade;
+import model.PaymentFacade;
 
 @WebServlet(urlPatterns = {"/customerAppointmentsServlet"})
 public class CustomerAppointmentServlet extends HttpServlet {
+
+    @EJB
+    private PaymentFacade paymentFacade;
     
     @EJB
     private AppointmentFacade appointmentFacade;
 
     @EJB
     private CustomerFacade customerFacade;
+    
     private static int counter = 1; 
     
     
@@ -47,11 +52,14 @@ public class CustomerAppointmentServlet extends HttpServlet {
         long upcomingCount = appointments.stream()
             .filter(a -> "Pending".equalsIgnoreCase(a.getStatus()) || "Accepted".equalsIgnoreCase(a.getStatus()))
             .count();
+        
+        double totalPaid = paymentFacade.sumPaidByCustomer(customer);
 
         // Set attributes for JSP
         request.setAttribute("appointments", appointments);
         request.setAttribute("completedCount", completedCount);
         request.setAttribute("upcomingCount", upcomingCount);
+        request.setAttribute("totalPaid", totalPaid);
 
         // Forward to JSP
         request.getRequestDispatcher("customerAppointment.jsp").forward(request, response);

@@ -7,7 +7,6 @@ package model;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 /**
@@ -15,7 +14,7 @@ import javax.persistence.PersistenceContext;
  * @author Jee
  */
 @Stateless
-public class DoctorFacade extends AbstractFacade<Doctor> {
+public class StaffFacade extends AbstractFacade<Staff> {
 
     @PersistenceContext(unitName = "APU_Medical-ejbPU")
     private EntityManager em;
@@ -25,20 +24,8 @@ public class DoctorFacade extends AbstractFacade<Doctor> {
         return em;
     }
 
-    public DoctorFacade() {
-        super(Doctor.class);
-    }
-    
-    public Doctor findByEmail(String email) {
-        try {
-            return em.createQuery(
-                    "SELECT d FROM Doctor d WHERE d.email = :email",
-                    Doctor.class)
-                .setParameter("email", email)
-                .getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
+    public StaffFacade() {
+        super(Staff.class);
     }
     
 }

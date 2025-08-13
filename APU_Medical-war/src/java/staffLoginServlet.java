@@ -9,37 +9,54 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import model.CounterStaff;
 import model.CounterStaffFacade;
+import model.Doctor;
+import model.DoctorFacade;
 
 @WebServlet(urlPatterns = {"/staffLoginServlet"})
 public class staffLoginServlet extends HttpServlet {
 
     @EJB
+    private DoctorFacade doctorFacade;
+
+    @EJB
     private CounterStaffFacade counterStaffFacade;
+    
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
-            
+
             String email = request.getParameter("email");
             String password = request.getParameter("password");
             String role = request.getParameter("role");
-            
-            HttpSession session = request.getSession();
-            
-            if ("counter".equals(role)) {
-            CounterStaff counter = counterStaffFacade.findByEmail(email);
-            if (counter != null && counter.getPassword().equals(password)) {
-                session.setAttribute("counter", counter);
-                response.sendRedirect("counterDashboard.jsp"); // ✅ redirect to counterDashboard
-                return;
-            }
-        }
 
-        // Invalid login
-        response.sendRedirect("staff_login.jsp?error=Invalid email, password, or role.");
+            HttpSession session = request.getSession();
+
+            // COUNTER
+            if ("counter".equals(role)) {
+                CounterStaff counter = counterStaffFacade.findByEmail(email);
+                if (counter != null && counter.getPassword().equals(password)) {
+                    session.setAttribute("counter", counter);
+                    response.sendRedirect("counterDashboard.jsp"); // make sure file exists
+                    return;
+                }
+            }
+            // DOCTOR (this must NOT be inside the counter block)
+            else if ("doctor".equals(role)) {
+                Doctor doctor = doctorFacade.findByEmail(email);
+                if (doctor != null && doctor.getPassword().equals(password)) {
+                    session.setAttribute("doctor", doctor);
+                    response.sendRedirect("doctorDashBoard.jsp"); // or doctorDashboard.jsp, pick one and keep it
+                    return;
+                }
+            }
+            // (Optional) MANAGER role can go here later...
+
+            // Invalid login → send back to the SAME login JSP name you actually use
+            response.sendRedirect("staff_login.jsp?error=Invalid email, password, or role.");
+        }
     }
-}
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
     /**

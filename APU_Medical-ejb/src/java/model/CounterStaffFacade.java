@@ -38,4 +38,5 @@ public class CounterStaffFacade extends AbstractFacade<CounterStaff> {
             return null;
         }
     }
+    
 }

@@ -49,7 +49,7 @@
             <div class="card-body">
                 <i class="fas fa-wallet fa-2x text-warning mb-2"></i>
                 <h6 class="text-muted">Total Paid</h6>
-                <h3>RM 200</h3>
+                <h3><c:out value="${totalPaid}" /></h3>
             </div>
         </div>
     </div>

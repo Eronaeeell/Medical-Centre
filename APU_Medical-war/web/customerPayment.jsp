@@ -30,9 +30,10 @@
         int receiptsIssued = 0;
         double outstanding = 0;
 
-        if (payments != null) {
-            for (Payment p : payments) {
-                if ("Paid".equalsIgnoreCase(p.getStatus())) receiptsIssued++;
+        // ✅ Count receipts only for this logged-in customer by using paymentHistory
+        if (paymentHistory != null) {
+            for (Map<String, String> ph : paymentHistory) {
+                if ("Paid".equalsIgnoreCase(ph.get("type"))) receiptsIssued++;
             }
         }
 

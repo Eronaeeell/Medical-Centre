@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -7,12 +9,11 @@ import javax.servlet.http.*;
 public class LogoutServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Invalidate session
+
         HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-        // Redirect to login page
-        response.sendRedirect("login.jsp?message=You have been logged out.");
+        if (session != null) session.invalidate();
+
+        String msg = URLEncoder.encode("Successfully logged out", StandardCharsets.UTF_8.name());
+        response.sendRedirect(request.getContextPath() + "/login.jsp?message=" + msg);
     }
 }

@@ -62,4 +62,13 @@ public class PaymentFacade extends AbstractFacade<Payment> {
         return n.doubleValue();
     }
     
+    public double sumPaidByCustomer(Customer customer) {
+        Number n = em.createQuery(
+            "SELECT COALESCE(SUM(p.amount),0) FROM Payment p " +
+            "WHERE p.customer = :cust AND LOWER(p.status) = 'paid'", Number.class)
+            .setParameter("cust", customer)
+            .getSingleResult();
+        return n.doubleValue();
+    }
+    
 }

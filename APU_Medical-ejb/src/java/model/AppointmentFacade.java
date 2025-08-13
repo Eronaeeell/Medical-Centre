@@ -74,5 +74,7 @@ public class AppointmentFacade extends AbstractFacade<Appointment> {
                  .setParameter("customer", customer)
                  .getResultList();
     }
+    
+    
 }
 

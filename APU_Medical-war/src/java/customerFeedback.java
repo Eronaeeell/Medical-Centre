@@ -12,23 +12,22 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import model.Appointment;
 import model.AppointmentFacade;
-import model.CounterStaff;
-import model.CounterStaffFacade;
 import model.Customer;
 import model.CustomerFacade;
 import model.Doctor;
 import model.DoctorFacade;
 import model.Feedback;
 import model.FeedbackFacade;
+import model.StaffFacade;
 
 @WebServlet(urlPatterns = {"/customerFeedback"})
 public class customerFeedback extends HttpServlet {
 
     @EJB
-    private CounterStaffFacade counterStaffFacade;
+    private DoctorFacade doctorFacade;
 
     @EJB
-    private DoctorFacade doctorFacade;
+    private StaffFacade staffFacade;
 
     @EJB
     private AppointmentFacade appointmentFacade;
@@ -38,6 +37,9 @@ public class customerFeedback extends HttpServlet {
 
     @EJB
     private CustomerFacade customerFacade;
+    
+    
+    
     
     
 

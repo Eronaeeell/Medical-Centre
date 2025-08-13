@@ -1,3 +1,4 @@
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -33,22 +34,60 @@ public class Doctor implements Serializable {
     private String ic;
     private String age;
     private String email; 
+    private String password;
     private String phonenumber;
     private String joinDate;
+    private String department;
+    private String status;  
     
     @OneToMany(mappedBy = "doctor")
     private List<Feedback> feedbacks;
     
 //    @ManyToOne 
 //    private Appointment appointment;
-   
 
-    public Doctor( String name, String ic, String age, String email, String phonenumber) {
+    public Doctor(String name, String ic, String age, String email, String password, String phonenumber, String joinDate, String department, String status) {
         this.name = name;
         this.ic = ic;
         this.age = age;
         this.email = email;
+        this.password = password;
         this.phonenumber = phonenumber;
+        this.joinDate = joinDate;
+        this.department = department;
+        this.status = status;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
+    public String getJoinDate() {
+        return joinDate;
+    }
+
+    public void setJoinDate(String joinDate) {
+        this.joinDate = joinDate;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public List<Feedback> getFeedbacks() {

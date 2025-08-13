@@ -43,9 +43,9 @@ public class Payment implements Serializable {
     @ManyToOne
     private Appointment appointment;
     @ManyToOne
-    private Doctor doctor;
+    private Staff staff;
 
-    public Payment(double amount, String type, String paymentDate, String paymentTime, String status, String method, Customer customer, Appointment appointment, Doctor doctor) {
+    public Payment(double amount, String type, String paymentDate, String paymentTime, String status, String method, Customer customer, Appointment appointment, Staff staff) {
         this.amount = amount;
         this.type = type;
         this.paymentDate = paymentDate;
@@ -54,7 +54,7 @@ public class Payment implements Serializable {
         this.method = method;
         this.customer = customer;
         this.appointment = appointment;
-        this.doctor = doctor;
+        this.staff = staff;
     }
 
     
