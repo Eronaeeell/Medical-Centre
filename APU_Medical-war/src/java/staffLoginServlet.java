@@ -11,6 +11,8 @@ import model.CounterStaff;
 import model.CounterStaffFacade;
 import model.Doctor;
 import model.DoctorFacade;
+import model.Staff;
+import model.StaffFacade;
 
 @WebServlet(urlPatterns = {"/staffLoginServlet"})
 public class staffLoginServlet extends HttpServlet {
@@ -20,6 +22,9 @@ public class staffLoginServlet extends HttpServlet {
 
     @EJB
     private CounterStaffFacade counterStaffFacade;
+    
+    @EJB
+    private StaffFacade staffFacade;
     
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -51,7 +56,16 @@ public class staffLoginServlet extends HttpServlet {
                     return;
                 }
             }
-            // (Optional) MANAGER role can go here later...
+            // MANAGER
+            else if ("manager".equals(role)) {
+                // Find staff with manager role
+                Staff manager = staffFacade.findByEmailAndRole(email, "manager");
+                if (manager != null && manager.getPassword().equals(password)) {
+                    session.setAttribute("manager", manager);
+                    response.sendRedirect("ManagerDashboardServlet");
+                    return;
+                }
+            }
 
             // Invalid login → send back to the SAME login JSP name you actually use
             response.sendRedirect("staff_login.jsp?error=Invalid email, password, or role.");

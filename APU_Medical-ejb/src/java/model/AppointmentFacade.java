@@ -75,6 +75,32 @@ public class AppointmentFacade extends AbstractFacade<Appointment> {
                  .getResultList();
     }
     
+    // Dashboard query methods
+    public long countTodaysAppointments() {
+        return em.createQuery(
+            "SELECT COUNT(a) FROM Appointment a WHERE a.date = :today", Long.class)
+            .setParameter("today", java.time.LocalDate.now().toString())
+            .getSingleResult();
+    }
+    
+    public long countPendingAppointments() {
+        return em.createQuery(
+            "SELECT COUNT(a) FROM Appointment a WHERE a.status = 'Pending'", Long.class)
+            .getSingleResult();
+    }
+    
+    public Double getMonthlyRevenue() {
+        try {
+            String currentMonth = java.time.LocalDate.now().toString().substring(0, 7); // YYYY-MM format
+            Object result = em.createQuery(
+                "SELECT SUM(CAST(a.payment AS double)) FROM Appointment a WHERE a.date LIKE :month AND a.payment IS NOT NULL")
+                .setParameter("month", currentMonth + "%")
+                .getSingleResult();
+            return result != null ? (Double) result : 0.0;
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
     
 }
 
