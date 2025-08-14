@@ -7,6 +7,7 @@ package model;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 /**
@@ -26,6 +27,19 @@ public class StaffFacade extends AbstractFacade<Staff> {
 
     public StaffFacade() {
         super(Staff.class);
+    }
+    
+    public Staff findByEmailAndRole(String email, String role) {
+        try {
+            return em.createQuery(
+                    "SELECT s FROM Staff s WHERE s.email = :email AND s.role = :role",
+                    Staff.class)
+                .setParameter("email", email)
+                .setParameter("role", role)
+                .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        }
     }
     
 }

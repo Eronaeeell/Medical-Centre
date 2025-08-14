@@ -41,4 +41,11 @@ public class DoctorFacade extends AbstractFacade<Doctor> {
         }
     }
     
+    // Dashboard query method
+    public long countActiveDoctors() {
+        return em.createQuery(
+            "SELECT COUNT(d) FROM Doctor d WHERE d.status = 'Active'", Long.class)
+            .getSingleResult();
+    }
+    
 }
