@@ -59,7 +59,7 @@ public class AppointmentFacade extends AbstractFacade<Appointment> {
     public List<Map<String, Object>> fetchAllForManager() {
     @SuppressWarnings("unchecked")
     List<Object[]> rows = em.createNativeQuery(
-        "SELECT CUSTOMER_ID, DOCTORNAME, \"DATE\", \"TIME\", STATUS, PAYMENT, FEEDBACK " +
+        "SELECT CUSTOMER_ID, DOCTORNAME, \"DATE\", \"TIME\", STATUS, PAYMENT, FEEDBACK, TYPE " +
         "FROM APPOINTMENT " +
         "ORDER BY \"DATE\" DESC, \"TIME\" DESC"
     ).getResultList();
@@ -74,6 +74,7 @@ public class AppointmentFacade extends AbstractFacade<Appointment> {
         m.put("status",      r[4] != null ? r[4].toString() : "");
         m.put("payment",     r[5] != null ? r[5].toString() : "");
         m.put("feedback",    r[6] != null ? r[6].toString() : "");
+        m.put("type",        r[7] != null ? r[7].toString() : ""); // Add this line
         out.add(m);
     }
     return out;
