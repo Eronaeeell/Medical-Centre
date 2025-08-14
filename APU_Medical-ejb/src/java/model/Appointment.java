@@ -124,7 +124,15 @@ public class Appointment implements Serializable {
     public void setId(Long id) {
         this.id = id; 
     }
+    
+    public String getFeedback() {
+        return feedback;
+    }
+    public void setFeedback(String feedback) {
+       this.feedback = feedback;
+    }
 
+    
     @Override
     public int hashCode() {
         int hash = 0;

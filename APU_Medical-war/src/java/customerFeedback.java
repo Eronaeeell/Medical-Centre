@@ -18,7 +18,7 @@ import model.Doctor;
 import model.DoctorFacade;
 import model.Feedback;
 import model.FeedbackFacade;
-import model.StaffFacade;
+//import model.StaffFacade;
 
 @WebServlet(urlPatterns = {"/customerFeedback"})
 public class customerFeedback extends HttpServlet {
@@ -26,8 +26,8 @@ public class customerFeedback extends HttpServlet {
     @EJB
     private DoctorFacade doctorFacade;
 
-    @EJB
-    private StaffFacade staffFacade;
+    //@EJB
+    //private StaffFacade staffFacade;
 
     @EJB
     private AppointmentFacade appointmentFacade;

@@ -41,4 +41,10 @@ public class DoctorFacade extends AbstractFacade<Doctor> {
         }
     }
     
+    public long countActiveDoctors() {
+        return em.createQuery(
+            "SELECT COUNT(d) FROM Doctor d WHERE LOWER(d.status) = 'active'", Long.class)
+            .getSingleResult();
+    }
+    
 }

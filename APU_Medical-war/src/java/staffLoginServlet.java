@@ -11,6 +11,8 @@ import model.CounterStaff;
 import model.CounterStaffFacade;
 import model.Doctor;
 import model.DoctorFacade;
+import model.Manager;
+import model.ManagerFacade;
 
 @WebServlet(urlPatterns = {"/staffLoginServlet"})
 public class staffLoginServlet extends HttpServlet {
@@ -21,6 +23,8 @@ public class staffLoginServlet extends HttpServlet {
     @EJB
     private CounterStaffFacade counterStaffFacade;
     
+    @EJB 
+    private ManagerFacade managerFacade;
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -51,7 +55,22 @@ public class staffLoginServlet extends HttpServlet {
                     return;
                 }
             }
-            // (Optional) MANAGER role can go here later...
+            // === MANAGER ===
+            else if ("manager".equalsIgnoreCase(role)) {
+                Manager manager = managerFacade.findByEmail(email);
+                if (manager != null && password.equals(manager.getPassword())) {
+                    // Optional status check: comment out if you don't store status yet
+                    // if (manager.getStatus() != null && !"ACTIVE".equalsIgnoreCase(manager.getStatus())) {
+                    //     response.sendRedirect("staff_login.jsp?error=Your+account+is+inactive.");
+                    //     return;
+                    // }
+
+                    session.setAttribute("manager", manager);
+                    // Even if not implemented yet, redirect is correct once JSP exists
+                    response.sendRedirect("managerDashboard.jsp");
+                    return;
+                }
+            }
 
             // Invalid login → send back to the SAME login JSP name you actually use
             response.sendRedirect("staff_login.jsp?error=Invalid email, password, or role.");

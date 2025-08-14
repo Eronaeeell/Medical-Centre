@@ -39,4 +39,9 @@ public class CounterStaffFacade extends AbstractFacade<CounterStaff> {
         }
     }
     
+    public long countAllCounterStaff() {
+        return em.createQuery("SELECT COUNT(cs) FROM CounterStaff cs", Long.class)
+            .getSingleResult();
+    }
+    
 }

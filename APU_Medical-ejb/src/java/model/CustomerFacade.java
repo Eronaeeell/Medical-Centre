@@ -59,5 +59,10 @@ public class CustomerFacade extends AbstractFacade<Customer> {
             .getResultList();
     }
     
+    public long countAllCustomers() {
+        return em.createQuery("SELECT COUNT(c) FROM Customer c", Long.class)
+            .getSingleResult();
+    }
+    
     
 }
